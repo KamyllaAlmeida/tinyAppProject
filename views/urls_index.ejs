@@ -20,6 +20,7 @@
             <%= urls[i] %>
           </a>
         </li>
+        <form method="POST" action="/urls/<%= i %>/delete"><button>Delete</button></form>
       <% } %>
     </ul>
 </body>

@@ -69,8 +69,15 @@ app.get("/urls/:id", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL;
   let longURL = urlDatabase[shortURL];
+  console.log(LONGlongURL);
   res.redirect(longURL);
 });
+
+app.post("/urls/:id/delete", (req, res) => {
+  const id = req.params.id;
+  delete urlDatabase[id];
+  res.redirect("/urls");
+})
 
 
 
