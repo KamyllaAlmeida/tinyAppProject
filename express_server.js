@@ -1,4 +1,6 @@
 var express = require("express");
+var cookieParser = require('cookie-parser');
+
 var app = express();
 var PORT = 8080; // default port 8080
 
@@ -6,18 +8,19 @@ app.set("view engine", "ejs");
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser());
 
 function generateRandomString() {
  
-    const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
-    let string_length = 6;
-    let randomstring = '';
-    for (let i=0; i<string_length; i++) {
-      let rnum = Math.floor(Math.random() * chars.length);
-      randomstring += chars.substring(rnum,rnum+1);
-    }
-    return randomstring;
+  const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
+  let string_length = 6;
+  let randomstring = '';
+  for (let i=0; i<string_length; i++) {
+    let rnum = Math.floor(Math.random() * chars.length);
+    randomstring += chars.substring(rnum,rnum+1);
   }
+  return randomstring;
+}
 
 var urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -41,7 +44,10 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase };
+  let templateVars = { 
+    username: req.cookies["username"],
+    urls: urlDatabase 
+  };
   res.render("urls_index", templateVars);
 });
 
@@ -59,6 +65,7 @@ app.post("/urls", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   let id = req.params.id;
   let templateVars = {
+    username: req.cookies["username"],
     shortURL: id,
     longURL: urlDatabase[id] };
   res.render("urls_show", templateVars);
@@ -83,6 +90,13 @@ app.get("/u/:shortURL", (req, res) => {
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
   delete urlDatabase[id];
+  res.redirect("/urls");
+})
+
+// User login with cookies
+app.post("/login", (req, res) => {
+  const name = req.body.username;
+  res.cookie('username', name);
   res.redirect("/urls");
 })
 

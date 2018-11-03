@@ -2,4 +2,15 @@
 <meta charset="UTF-8">
 <title>Header</title>
 
+<%if (username) {%>
+    <h2> Hi, <%= username %> </h2>
+
+    <% } else { %>
+    <form method="POST" action="/login">
+        <p>Name:</p>
+        <input type="text" name="username">
+        <button>Save</button>
+    </form>
+<%}%>
+
 
