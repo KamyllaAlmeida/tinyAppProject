@@ -57,7 +57,6 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  console.log(req.params.id);
   let id = req.params.id;
   let templateVars = {
     shortURL: id,
@@ -65,14 +64,22 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+//Updating long URL
+app.post("/urls/:id", (req, res) => {
+  let id = req.params.id;
+  let longURL = req.body.longURL;
+  urlDatabase[id] = longURL;
+  res.redirect("/urls");
+});
+
 // I dont know what I need to do with this code
 app.get("/u/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL;
   let longURL = urlDatabase[shortURL];
-  console.log(LONGlongURL);
   res.redirect(longURL);
 });
 
+// Deleting urls
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
   delete urlDatabase[id];
