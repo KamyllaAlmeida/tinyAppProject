@@ -27,6 +27,22 @@ var urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+
+const users = { 
+  "b2xVn1": {
+    id: "b2xVn1",
+    name: "User", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "b2xVn2": {
+    id: "b2xVn2",
+    name: "User2", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -44,8 +60,9 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
+  let id = req.cookies["user_id"]; 
   let templateVars = { 
-    username: req.cookies["username"],
+    user: users[id],
     urls: urlDatabase 
   };
   res.render("urls_index", templateVars);
@@ -65,7 +82,7 @@ app.post("/urls", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   let id = req.params.id;
   let templateVars = {
-    username: req.cookies["username"],
+    user: users[id],
     shortURL: id,
     longURL: urlDatabase[id] };
   res.render("urls_show", templateVars);
@@ -91,20 +108,77 @@ app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
   delete urlDatabase[id];
   res.redirect("/urls");
-})
+});
 
-// User login with cookies
+// User login 
+app.get("/login", (req, res) => {
+  res.render("login");
+});
+
+// User login (email and password)
 app.post("/login", (req, res) => {
-  const name = req.body.username;
-  res.cookie('username', name);
-  res.redirect("/urls");
-})
+  let email = req.body.email;
+  let password = req.body.password;
+  let id = 0;
+
+  for(var user_id in users){
+    if(users[user_id].email === email && users[user_id].password === password) {
+      id = user_id;
+    }
+  }
+
+  if(id){
+    res.cookie('user_id', id);
+    res.redirect("/urls");
+  }else{
+    res.statusCode = 403;
+    res.end("This email has not been registered.");
+  }
+});
 
 // Logout method
 app.post("/logout", (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
+  res.redirect("/login"); // Mudar para renderizar depois
+});
+
+// Render the registration page
+app.get("/register", (req, res) => {
+  res.render("register");
+});
+
+//Creating a new User and setting cookie(user_id)
+app.post("/register", (req, res) => {
+  let name = req.body.name;
+  let email = req.body.email;
+  let password = req.body.password;
+  const id = generateRandomString();
+  
+  if(email === "" || password === ""){
+    res.statusCode = 400;
+    res.end("Please, enter e-mail and password.");
+  }
+
+  for(var item in users){
+    if(users[item].email === email){
+    res.statusCode = 400;
+    res.end("This email is already being used.");
+    }
+  }
+  
+  if(email && password){
+  users[id] = {
+    id: id,
+    email: email, 
+    password: password
+  }
+
+  res.cookie('user_id', id);
   res.redirect("/urls");
-})
+  }
+
+
+});
 
 
 

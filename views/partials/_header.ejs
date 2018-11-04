@@ -2,18 +2,14 @@
 <meta charset="UTF-8">
 <title>Header</title>
 
-<%if (username) {%>
-    <h2> Hi, <%= username %> </h2>
+<%if (user) {%>
+    <h2> Hi, <%= user.name %> </h2>
     <form method="POST" action="/logout">
         <button>Logout</button>
     </form>
-
-    <% } else { %>
-    <form method="POST" action="/login">
-        <p>Name:</p>
-        <input type="text" name="username">
-        <button>Save</button>
-    </form>
+<% } else { %>
+    <a href="/register %>" title = "register">Register</a>
+    <a href="/login %>" title = "login">Login</a>
 <%}%>
 
-
+    
