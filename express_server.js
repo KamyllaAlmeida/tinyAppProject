@@ -16,6 +16,7 @@ app.use(cookieSession({
   // Cookie Options
   maxAge: 2 * 60 * 60 * 1000 // 2 hours
 }));
+app.use(methodOverride('_method'));
 
 function generateRandomString() {
  
@@ -124,7 +125,7 @@ app.get("/urls/:id", (req, res) => {
 });
 
 //Updating long URL
-app.post("/urls/:id", (req, res) => {
+app.put("/urls/:id", (req, res) => {
   let id = req.params.id;
   let userID = req.session.user_id; 
   let longURL = req.body.longURL;
@@ -143,8 +144,8 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
-// Deleting urls
-app.post("/urls/:id/delete", (req, res) => {
+// Deleting url
+app.delete("/urls/:id", (req, res) => {
   let userID = req.session.user_id; 
   const id = req.params.id;
   if(userID) {
@@ -152,7 +153,7 @@ app.post("/urls/:id/delete", (req, res) => {
     res.redirect("/urls");
   } else{
     res.redirect("/login");
-  }
+  } 
 });
 
 // User login 

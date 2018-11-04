@@ -21,8 +21,8 @@
             <%= urls[i].longURL %>
           </a>
         </li>
-        <form method="POST" action="/urls/<%= i %>/delete"><button>Delete</button></form>
-        <a href="/urls/<%= i %>" title = "update url">edit</a>
+        <form method="POST" action="/urls/<%= i %>?_method=DELETE"><button>Delete</button></form>
+        <a href="/urls/<%= i %>" title = "updateUrl">edit</a>
       <% } %>
     </ul>
 </body>
