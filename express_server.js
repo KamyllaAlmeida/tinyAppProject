@@ -194,7 +194,7 @@ app.post("/register", (req, res) => {
   let name = req.body.name;
   let email = req.body.email;
   let password = req.body.password;
-  const hashedPassword = bcrypt.hashSync(password, 10)
+  const hashedPassword = bcrypt.hashSync(password, 10);
   const id = generateRandomString();
   
   if(email === "" || password === ""){
