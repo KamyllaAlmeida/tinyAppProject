@@ -18,17 +18,6 @@ app.use(cookieSession({
 }));
 app.use(methodOverride('_method'));
 
-function generateRandomString() {
- 
-  const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
-  let string_length = 6;
-  let randomstring = '';
-  for (let i=0; i<string_length; i++) {
-    let rnum = Math.floor(Math.random() * chars.length);
-    randomstring += chars.substring(rnum,rnum+1);
-  }
-  return randomstring;
-}
 
 var urlDatabase = {
   "b2xVn2": { 
@@ -40,7 +29,6 @@ var urlDatabase = {
     userID: "b2xVn2"
   }
 };
-
 
 
 const users = { 
@@ -56,8 +44,27 @@ const users = {
   }
 }
 
+
+function generateRandomString() {
+ 
+  const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
+  let string_length = 6;
+  let randomstring = '';
+  for (let i=0; i<string_length; i++) {
+    let rnum = Math.floor(Math.random() * chars.length);
+    randomstring += chars.substring(rnum,rnum+1);
+  }
+  return randomstring;
+}
+
+
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  let id = req.session.user_id;
+  if(id) {
+    res.redirect("/urls");
+  }else{
+    res.redirect("/login");
+  }
 });
 
 app.listen(PORT, () => {
@@ -75,18 +82,22 @@ app.get("/hello", (req, res) => {
 //Show a list of URLs
 app.get("/urls", (req, res) => {
   let id = req.session.user_id;
-  let userURLs = {};
-  for (var i in urlDatabase){
-    if(id == urlDatabase[i].userID) {
-      userURLs[i] = urlDatabase[i];
+  if (id) {
+    let userURLs = {};
+    for (var i in urlDatabase) {
+      if(id == urlDatabase[i].userID) {
+        userURLs[i] = urlDatabase[i];
+      }
     }
+    let templateVars = { 
+      user: users[id],
+      urls: userURLs 
+    };
+    res.render("urls_index", templateVars);
+  } else {
+    res.statusCode = 401;
+    res.end("Please, log in.");
   }
-  let templateVars = { 
-    user: users[id],
-    urls: userURLs 
-  };
-  console.log(userURLs);
-  res.render("urls_index", templateVars);
 });
 
 // Page New URL
@@ -96,9 +107,9 @@ app.get("/urls/new", (req, res) => {
     user: users[id],
     urls: urlDatabase 
   };
-  if(templateVars.user){
+  if(templateVars.user) {
     res.render("urls_new", templateVars);
-  }else{
+  }else {
     res.redirect("/login");
   }
 });
@@ -106,22 +117,36 @@ app.get("/urls/new", (req, res) => {
 // Creating new URL
 app.post("/urls", (req, res) => {
   let userID = req.session.user_id;
-  let id = generateRandomString();
-  let longURL = req.body.longURL;
-  urlDatabase[id] = {
-    longURL: longURL,
-    userID: userID
-  };
-  res.redirect("http://localhost:8080/urls/" + id);    
+  if(userID) {
+    let id = generateRandomString();
+    let longURL = req.body.longURL;
+    urlDatabase[id] = {
+      longURL: longURL,
+      userID: userID
+    };
+    res.redirect("/urls/" + id);
+  }else {
+    res.statusCode = 401;
+    res.end("Please, log in.");
+  }
+        
 });
 
 app.get("/urls/:id", (req, res) => {
   let id = req.params.id;
-  let templateVars = {
-    user: users[id],
-    shortURL: id,
-    longURL: urlDatabase[id].longURL };
-  res.render("urls_show", templateVars);
+  let userID = req.session.user_id;
+
+  if(id in urlDatabase && urlDatabase[id].userID === userID) {
+    let templateVars = {
+      user: users[userID],
+      shortURL: id,
+      longURL: urlDatabase[id].longURL 
+    };
+    res.render("urls_show", templateVars);
+  } else {
+    res.statusCode = 404;
+    res.end("URL not registered.");
+  }
 });
 
 //Updating long URL
@@ -129,10 +154,11 @@ app.put("/urls/:id", (req, res) => {
   let id = req.params.id;
   let userID = req.session.user_id; 
   let longURL = req.body.longURL;
-  if(userID) {
+  if(userID && urlDatabase[id].userID === userID) {
     urlDatabase[id].longURL = longURL;
     res.redirect("/urls");
   } else{
+    res.statusCode = 401;
     res.redirect("/login");
   }
 });
@@ -140,15 +166,19 @@ app.put("/urls/:id", (req, res) => {
 //Redirect to long URL
 app.get("/u/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL;
-  let longURL = urlDatabase[shortURL].longURL;
-  res.redirect(longURL);
+  if(shortURL in urlDatabase) {
+    res.redirect(urlDatabase[shortURL].longURL);
+  }else {
+    res.statusCode = 401;
+    res.end("Short URL does not exist.");
+  }
 });
 
 // Deleting url
 app.delete("/urls/:id", (req, res) => {
   let userID = req.session.user_id; 
   const id = req.params.id;
-  if(userID) {
+  if(userID && urlDatabase[id].userID === userID) {
     delete urlDatabase[id];
     res.redirect("/urls");
   } else{
@@ -158,7 +188,12 @@ app.delete("/urls/:id", (req, res) => {
 
 // User login 
 app.get("/login", (req, res) => {
-  res.render("login");
+  let userID = req.session.user_id;
+  if(userID) {
+    res.redirect("/urls");
+  }else {
+    res.render("login");
+  }
 });
 
 // User login (email and password)
@@ -167,14 +202,17 @@ app.post("/login", (req, res) => {
   let password = req.body.password;
   let id = 0;
 
-    for(var user_id in users){
-    if(users[user_id].email === email && bcrypt.compareSync(password, users[user_id].password)){
+  if (email === "" || password === "") {
+    res.statusCode = 403;
+    res.end("Enter email and password.");
+  }
+  
+  for(var user_id in users) {
+    if(users[user_id].email === email && bcrypt.compareSync(password, users[user_id].password)) {
       id = user_id;
     }
   }
-  
-
-  if(id){
+  if(id) {
     req.session.user_id = id;
     res.redirect("/urls");
   }else{
@@ -186,12 +224,18 @@ app.post("/login", (req, res) => {
 // Logout method
 app.post("/logout", (req, res) => {
   req.session = null;
-  res.redirect("/login"); // Mudar para renderizar depois
+  res.redirect("/login"); 
 });
 
 // Render the registration page
 app.get("/register", (req, res) => {
-  res.render("register");
+  let userID = req.session.user_id;
+  if(userID) {
+    res.redirect("/urls");
+  }else {
+    res.render("register");
+  }
+  
 });
 
 //Creating a new User and setting cookie session
@@ -201,25 +245,24 @@ app.post("/register", (req, res) => {
   const hashedPassword = bcrypt.hashSync(password, 10);
   const id = generateRandomString();
   
-  if(email === "" || password === ""){
+  if(email === "" || password === "") {
     res.statusCode = 400;
     res.end("Please, enter e-mail and password.");
   }
 
-  for(var item in users){
-    if(users[item].email === email){
+  for(var item in users) {
+    if(users[item].email === email) {
     res.statusCode = 400;
     res.end("This email is already being used.");
     }
   }
   
-  if(email && password){
+  if(email && password) {
   users[id] = {
     id: id,
     email: email, 
     password: hashedPassword
   }
-  console.log(users);
   req.session.user_id = id;
   res.redirect("/urls");
   }

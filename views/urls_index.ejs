@@ -4,26 +4,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <title>URLS</title>
 </head>
 <body>
     <% include partials/_header %>
-    <a href="/urls/new %>" title = "newURL">Create new URL</a>
+    <br><br>
+    <% if(user) {%>
+    <a href="/urls/new %>" title = "newURL">Create a New Short Link</a>
+    <%}%>
     <h1>URLS</h1>
-    <ul>
+    <div style="display: inline" style="margin:150px">
       <% for(var i in urls) { %>
-        <li>
-          <a>
-            <%= i%>
+        <form method="POST" action="/urls/<%= i %>?_method=DELETE" >
+          <a href="/u/<%= i %>">
+            http://localhost:8080/u/<%= i%>
           </a>
-          -
-          <a href='#'>
+          &nbsp;&nbsp;-&nbsp;&nbsp;
+          <a>
             <%= urls[i].longURL %>
           </a>
-        </li>
-        <form method="POST" action="/urls/<%= i %>?_method=DELETE"><button>Delete</button></form>
-        <a href="/urls/<%= i %>" title = "updateUrl">edit</a>
+          &nbsp;&nbsp;
+        <button>Delete <i class="fa fa-trash"></i></button>&nbsp;&nbsp;
+        <a href="/urls/<%= i%>">Edit</a></form><br><br>
       <% } %>
-    </ul>
+
+  </div>
 </body>
 </html>

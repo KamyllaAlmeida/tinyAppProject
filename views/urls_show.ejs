@@ -8,6 +8,10 @@
 </head>
 <body>
     <% include partials/_header %>
+    <br><br>
+    <% if(user) {%>
+    <a href="/urls %>" title = "index">Index</a>
+    <%}%>
     <h1>URL</h1>
     <p>
     <%= shortURL%> - <%= longURL%>
